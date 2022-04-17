@@ -28,9 +28,12 @@ const ProductSchema=new Schema({
            type:String, 
            default:"unsold" 
        },
-
+       bid:{
+           type:String,
+           default:"not started yet"
+       },
        //purchased by contain id of buyer
-       purschasedby:{
+       purchasedby:{
            type:String,
            default:"Not purchased yet"
        }

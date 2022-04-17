@@ -118,10 +118,29 @@ router.get('/fetchsellersoldproduct',fetchSeller, async (req, res) => {
     //const pass=await User.findOne({password:password});
     if (!sellersoldproduct)
       return res.status(400).json({message:"something went wrong"});
-    return res.status(200).send(sellersoldproduct)  
+    success=true  
+    return res.status(200).json({sellersoldproduct,success})  
     
 
   } catch (error) {
+    console.log(error);
+    res.status(400).json({message:"internal server error"});
+  }
+
+});
+
+//updatestatus
+router.patch('/updatestatus/:productid',fetchSeller,async(req,res)=>{
+  let success=false;
+  try{
+    const updateproduct=await Product.findByIdAndUpdate(req.params.productid,{status:"sold"})
+    if(!updateproduct)
+       return res.status(400).json({message:"error occured"})
+    success=true;   
+    return res.status(200).json({updateproduct,success,message:"successfully sold"})   
+  }
+  catch(error)
+  {
     console.log(error);
     res.status(400).json({message:"internal server error"});
   }

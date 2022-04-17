@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const jwt_secret = process.env.MYJWTTOKENUSER;
  const fetchUser = require('../middleware/user_authentication');
+ const Product = require('../models/Product');
 //creating user where authentication is not required
 router.post('/createuser',body('phone').isMobilePhone().isLength({min:"10"}), async (req, res) => {
   let success=false;
@@ -76,7 +77,7 @@ router.post('/login', async (req, res) => {
 
 });
 // router to get loggedin user details using post method where login is required
-router.post('/userdetails', fetchUser, async (req, res) => {
+router.get('/userdetails', fetchUser, async (req, res) => {
   try {
     const userid = req.user.id
     const user = await User.findById(userid).select("-password");
@@ -86,6 +87,68 @@ router.post('/userdetails', fetchUser, async (req, res) => {
     res.status(400).send("internal server error");
   }
 
+})
+
+router.put('/bid/:productid/:bid',fetchUser,async(req,res)=>{
+  try{
+  let success=false;
+  const userid=req.user.id;
+  const privprice=await Product.findById(req.params.productid);
+  if(req.params.bid<=privprice.bid)
+     return res.status(400).json({"message":"bid should be more than base price"});  
+  const updateproduct=await Product.findByIdAndUpdate(req.params.productid,{bid:req.params.bid,purchasedby:userid})
+  console.log(updateproduct)
+  if(!updateproduct)
+     return res.status(400).json({message:"something error occured",success})
+  success=true
+     return res.status(200).json({updateproduct,success})  
+  }catch(error)
+    {
+      console.log(error)
+      res.status(400).json({message:"internal server errror"});
+    } 
+
+
+})
+
+router.get('/wishlist',fetchUser,async(req,res)=>{
+  try {
+    let success=false;
+    const userid=req.user.id;
+    if(!userid)
+      return res.status(400).json({message:"error occured"})
+    const wishlist=await Product.find({"purchasedby":userid,"status":"unsold"})  ;
+    if(!wishlist)
+      return  res.status(400).json({message:"error occured"})
+    success=true;
+    res.status(200).json({wishlist,success})  
+  } catch (error) {
+    console.log(error);
+    res.status(400).json("internal server error");
+    
+  }
+})
+
+
+
+//my store
+
+router.get('/mystore',fetchUser,async(req,res)=>{
+  try {
+    let success=false;
+    const userid=req.user.id;
+    if(!userid)
+      return res.status(400).json({message:"error occured"})
+    const mystore=await Product.find({"purchasedby":userid,"status":"sold"})  ;
+    if(!mystore)
+      return  res.status(400).json({message:"error occured"})
+    success=true;
+    res.status(200).json({mystore,success})  
+  } catch (error) {
+    console.log(error);
+    res.status(400).json("internal server error");
+    
+  }
 })
 
 module.exports = router;
