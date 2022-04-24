@@ -1,6 +1,6 @@
 const mongoose=require('mongoose');
 const {Schema}=mongoose;
-
+const bidderSchema=new Schema({bname:"String",bamt:"String"})
 const ProductSchema=new Schema({
        sellerid:{
            type:mongoose.Schema.Types.ObjectId,
@@ -26,11 +26,11 @@ const ProductSchema=new Schema({
     //    status sold unsold
        status:{
            type:String, 
-           default:"unsold" 
+           default:"unsold", 
        },
+       bidhistory:[bidderSchema],
        bid:{
            type:String,
-           default:"not started yet"
        },
        //purchased by contain id of buyer
        purchasedby:{

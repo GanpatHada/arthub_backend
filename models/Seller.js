@@ -15,7 +15,9 @@ const SellerSchema=new Schema({
        phone:{
            type:String,
              
-
+       },
+       role:{
+           type:String,
        }
 }
 );

@@ -32,7 +32,8 @@ router.post('/createuser',body('phone').isMobilePhone().isLength({min:"10"}), as
     name: req.body.name,
     password: hash,
     email: req.body.email,
-    phone:req.body.phone
+    phone:req.body.phone,
+    role:req.body.role
   });
   const data = {
     user: {
@@ -68,7 +69,7 @@ router.post('/login', async (req, res) => {
     const jwtdata = jwt.sign(data, jwt_secret);
     success=true;
     console.log(jwtdata);
-       res.status(200).json({token:jwtdata,success:success,name:user.name,role:user.role});
+       res.status(200).json({token:jwtdata,success:success,name:user.name,role:user.role,id:user.id});
 
   } catch (error) {
     console.log(error);
@@ -94,9 +95,12 @@ router.put('/bid/:productid/:bid',fetchUser,async(req,res)=>{
   let success=false;
   const userid=req.user.id;
   const privprice=await Product.findById(req.params.productid);
-  if(req.params.bid<=privprice.bid)
-     return res.status(400).json({"message":"bid should be more than base price"});  
-  const updateproduct=await Product.findByIdAndUpdate(req.params.productid,{bid:req.params.bid,purchasedby:userid})
+  if(parseInt(req.params.bid)<=parseInt(privprice.bid))
+     return res.status(400).json({message:"bid should be more than base price",success}); 
+  const updateproduct0=await Product.findByIdAndUpdate(req.params.productid,{bid:req.params.bid,purchasedby:userid})
+  if(!updateproduct0)
+      return res.status(400).json({message:"something went wrong",success});        
+  const updateproduct=await Product.findByIdAndUpdate(req.params.productid,{$push: {bidhistory: {bname:userid, bamt: req.params.bid}}})
   console.log(updateproduct)
   if(!updateproduct)
      return res.status(400).json({message:"something error occured",success})
@@ -114,14 +118,23 @@ router.put('/bid/:productid/:bid',fetchUser,async(req,res)=>{
 router.get('/wishlist',fetchUser,async(req,res)=>{
   try {
     let success=false;
+    let request="Bid has increased"
     const userid=req.user.id;
     if(!userid)
       return res.status(400).json({message:"error occured"})
-    const wishlist=await Product.find({"purchasedby":userid,"status":"unsold"})  ;
+    const wishlist=await Product.find({"status":"unsold"})  ;
     if(!wishlist)
       return  res.status(400).json({message:"error occured"})
+    wishlist.forEach((newlist)=>{
+      newlist.bidhistory.forEach((newlist2)=>{
+        // console.log(newlist2.bname);
+        if(newlist2.bname===newlist.purchasedby&&newlist2.bamt===newlist.bid)
+             request='request sent'
+        // console.log(newlist2.bamt);
+      })
+    })
     success=true;
-    res.status(200).json({wishlist,success})  
+    res.status(200).json({wishlist,success,request})  
   } catch (error) {
     console.log(error);
     res.status(400).json("internal server error");

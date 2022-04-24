@@ -14,8 +14,9 @@ const UserSchema=new Schema({
        },
        phone:{
            type:String,
-             
-
+       },
+       role:{
+           type:String
        }
 }
 );
