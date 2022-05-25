@@ -9,9 +9,10 @@ app.use(cors());
 app.use('/api/user',require('./routes/user'))
 app.use('/api/seller',require('./routes/seller'))
 app.use('/api/product',require('./routes/product'))
+app.use('/api/payment',require('./routes/payment'))
 app.get('/', (req, res) => {
   
-  
+  res.send("hello");
 })
 connectToMongo();
 app.listen(port, () => {

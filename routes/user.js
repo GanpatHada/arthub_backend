@@ -1,13 +1,18 @@
 const express = require('express');
 const router = express.Router();
+const Razorpay=require('razorpay')
 const User = require('../models/User');
 require('dotenv').config({path:'../config.env'})
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const jwt_secret = process.env.MYJWTTOKENUSER;
- const fetchUser = require('../middleware/user_authentication');
- const Product = require('../models/Product');
+const fetchUser = require('../middleware/user_authentication');
+const Product = require('../models/Product');
+const instance = new Razorpay({
+  key_id: 'rzp_test_iezewoK1EFazfr',
+  key_secret: 'qpGOF2Tn3j3EkIw69UBNDEpH',
+});
 //creating user where authentication is not required
 router.post('/createuser',body('phone').isMobilePhone().isLength({min:"10"}), async (req, res) => {
   let success=false;
@@ -115,26 +120,53 @@ router.put('/bid/:productid/:bid',fetchUser,async(req,res)=>{
 
 })
 
-router.get('/wishlist',fetchUser,async(req,res)=>{
+router.get('/order/:productid',fetchUser,async(req,res)=>{
+  
   try {
     let success=false;
-    let request="Bid has increased"
+    const product=await Product.findById(req.params.productid);
+    if(!product)
+      return res.status(400).json({message:"error",success})
+    const amount=product.bid*100;
+    const currency="INR";
+    instance.orders.create({amount,currency},(error,order)=>{
+      if(error)
+        return res.status(400).json({message:"error",success})
+      success=true;  
+        return res.status(200).json({order:order,success})  
+        
+    })
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({message:"internal server error"})
+    
+  }
+})
+// router.post('/verify_payment',async(req,res)=>{
+//   console.log(JSON.stringify(req.body));
+//   console.log(req.body.payload.payment.entity.method);
+//   const crypto=require('crypto');
+//   const hash=crypto.createHmac('SHA256','ganpatSINGH22@#')
+//   .update(JSON.stringify(req.body))
+//   .digest('hex');
+//   console.log(hash);
+//   console.log(req.headers["x-razorpay-signature"]);
+//   res.status(200);
+// })
+//---------------------------------------
+
+
+router.get('/wishlist2',fetchUser,async(req,res)=>{
+  try {
+    let success=false;
     const userid=req.user.id;
     if(!userid)
       return res.status(400).json({message:"error occured"})
-    const wishlist=await Product.find({"status":"unsold"})  ;
+    const wishlist=await Product.find({"status":"unsold","bidhistory.bname":req.user.id})  ;
     if(!wishlist)
-      return  res.status(400).json({message:"error occured"})
-    wishlist.forEach((newlist)=>{
-      newlist.bidhistory.forEach((newlist2)=>{
-        // console.log(newlist2.bname);
-        if(newlist2.bname===newlist.purchasedby&&newlist2.bamt===newlist.bid)
-             request='request sent'
-        // console.log(newlist2.bamt);
-      })
-    })
+      return  res.status(400).json({message:"error occured",success})
     success=true;
-    res.status(200).json({wishlist,success,request})  
+    res.status(200).json({wishlist,success})  
   } catch (error) {
     console.log(error);
     res.status(400).json("internal server error");
@@ -142,6 +174,7 @@ router.get('/wishlist',fetchUser,async(req,res)=>{
   }
 })
 
+//---------------------------------------
 
 
 //my store
