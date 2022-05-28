@@ -23,6 +23,14 @@ const ProductSchema=new Schema({
        price:{
            type:String,
        },
+       approved:{
+            type:Boolean,
+            default:false
+  
+       },
+       approvaldate:{
+           type:String,
+       },
     //    status sold unsold
        status:{
            type:String, 

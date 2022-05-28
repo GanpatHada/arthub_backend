@@ -133,10 +133,11 @@ router.get('/fetchsellersoldproduct',fetchSeller, async (req, res) => {
 });
 
 //updatestatus
-router.patch('/updatestatus/:productid',fetchSeller,async(req,res)=>{
+router.patch('/updateapprove/:productid',fetchSeller,async(req,res)=>{
   let success=false;
+  const date = new Date(Date.now()).toLocaleString(undefined,{timeZone:'Asia/Kolkata'});
   try{
-    const updateproduct=await Product.findByIdAndUpdate(req.params.productid,{status:"sold"})
+    const updateproduct=await Product.findByIdAndUpdate(req.params.productid,{approved:true,approvaldate:date})
     if(!updateproduct)
        return res.status(400).json({message:"error occured"})
     success=true;   
